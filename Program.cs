@@ -1,16 +1,16 @@
-﻿using System.Data.SQLite;
-using Spectre.Console;
-using System.Configuration;
-using System.Collections.Specialized;
+﻿using CodingTracker;
+using System.Xml.Linq;
 
-namespace coding_tracker
+namespace coding_tracker;
+
+internal class CodingTracker()
 {
-    class CodingTracker
+    internal static void Main()
     {
-        static string? connectionString = @"data-source=C:\Users\mmadr\Desktop\Escuela\c#\CodingTracker\coding-tracker.db";
-        static void Main()
-        {
-            
-        }
+        CRUD XD = new();
+        DateTime x = new DateTime(2024,06,17,8,24,45);
+        DateTime y = DateTime.Now;
+        
+        Console.WriteLine(XD.CalculateDuration(x, y));
     }
 }
