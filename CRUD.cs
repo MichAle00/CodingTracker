@@ -1,19 +1,16 @@
 ﻿using System.Configuration;
 using System.Data.SQLite;
-using System.Globalization;
 using CodingTracker.Model;
 using Dapper;
 using Spectre.Console;
 
 namespace CodingTracker;
 
-
 internal class CRUD
 {
     static readonly string? con = ConfigurationManager.AppSettings.Get("connectionString");
 
-    UserInput input = new();
-    internal void CreateDB()
+    internal static void CreateDB()
     {
         using (var connection = new SQLiteConnection(con))
         {
@@ -32,11 +29,11 @@ internal class CRUD
         }
     }
 
-    internal void addToTable()
+    internal static void AddToTable()
     {
         AnsiConsole.Clear();
-        DateOnly date = input.GetDate();
-        TimeSpan[] times = input.GetTime();
+        DateOnly date = UserInput.GetDate();
+        TimeSpan[] times = UserInput.GetTime();
         string duration = CalculateDuration(times[0], times[1]);
 
         using (var connection = new SQLiteConnection(con))
@@ -51,17 +48,17 @@ internal class CRUD
 
             connection.Close();
 
-            AnsiConsole.Markup("[springgreen3_1]Records added succesfully![/]\n");
+            AnsiConsole.MarkupLine("[springgreen3_1]Records added succesfully![/]");
         }
     }
 
-    internal string CalculateDuration(TimeSpan start, TimeSpan end)
+    internal static string CalculateDuration(TimeSpan start, TimeSpan end)
     {
         TimeSpan dur = end - start;
         return dur.ToString("c");
     }
 
-    internal static void viewRecords()
+    internal static void ViewRecords()
     {
         AnsiConsole.Clear();
         using (var connection = new SQLiteConnection(con))
@@ -76,7 +73,7 @@ internal class CRUD
 
             if (!exists)
             {
-                AnsiConsole.Markup("[red]This table is empty![/]\n");
+                AnsiConsole.MarkupLine("[red]This table is empty![/]");
                 connection.Close();
                 return;
             }
@@ -130,6 +127,50 @@ internal class CRUD
                     Thread.Sleep(850);
                 }
             });
+        }
+    }
+
+    internal static void DeleteRecords()
+    {
+        int id = UserInput.GetId();
+
+        using (var connection = new SQLiteConnection(con))
+        {
+            connection.Open();
+
+            var sql = $"DELETE FROM codingSessions WHERE Id = {id}";
+
+            var cmd = connection.Execute(sql);
+
+            connection.Close();
+
+            AnsiConsole.MarkupLine("[mediumpurple3_1]Records deleted succesfully![/]");
+        }
+    }
+
+    internal static void UpdateRecords()
+    {
+        int id = UserInput.GetId();
+        DateOnly date = UserInput.GetDate();
+        TimeSpan[] time = UserInput.GetTime();
+        string? duration = CalculateDuration(time[0], time[1]);
+
+        using (var connection = new SQLiteConnection(con))
+        {
+            connection.Open();
+
+            string sql = @$"UPDATE codingSessions SET 
+                Date = '{date}',
+                Start = '{time[0]}',
+                End = '{time[1]}',
+                Duration = '{duration}'
+            WHERE Id = {id}";
+
+            var cmd = connection.Execute(sql);
+
+            connection.Close();
+
+            AnsiConsole.MarkupLine("[springgreen3_1]Records updated succesfully![/]");
         }
     }
 }

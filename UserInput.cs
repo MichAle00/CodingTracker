@@ -1,6 +1,5 @@
 ﻿using Spectre.Console;
 using System.Globalization;
-using System.Runtime.InteropServices;
 
 namespace CodingTracker;
 
@@ -8,8 +7,7 @@ internal class UserInput
 {
     internal void Menu()
     {
-        CRUD op = new();
-        op.CreateDB();
+        CRUD.CreateDB();
 
         bool closeApp = true;
 
@@ -17,12 +15,13 @@ internal class UserInput
         {
             var menu = AnsiConsole.Prompt(
             new SelectionPrompt<string>()
-            .Title("What do you want todo with the records?")
+            .Title("What do you want to do with the records?")
             .PageSize(10)
             .MoreChoicesText("[grey](Move up and down to select an option)[/]")
             .AddChoices(new[] {
-                "Leave", "View All",
-                "Add", "Remove", "Delete",
+                "View All", "Add",
+                "Delete", "Update",
+                "Leave",
             }));
 
             switch (menu)
@@ -33,17 +32,19 @@ internal class UserInput
                     break;
 
                 case "View All":
-                    CRUD.viewRecords();
+                    CRUD.ViewRecords();
                     break;
 
                 case "Add":
-                    op.addToTable();
-                    break;
-
-                case "Remove":
+                    CRUD.AddToTable();
                     break;
 
                 case "Delete":
+                    CRUD.DeleteRecords();
+                    break;
+
+                case "Update":
+                    CRUD.UpdateRecords();
                     break;
 
                 default:
@@ -53,7 +54,7 @@ internal class UserInput
         }
     }
 
-    internal DateOnly GetDate()
+    internal static DateOnly GetDate()
     {
         string? date = AnsiConsole.Ask<string>("[darkturquoise]Please input the date[/] [red](Format dd-MM-yy)[/]:");
 
@@ -67,7 +68,7 @@ internal class UserInput
         return Date;
     }
 
-    internal TimeSpan[] GetTime()
+    internal static TimeSpan[] GetTime()
     {
         string? start = AnsiConsole.Ask<string>("[darkturquoise]Please input your start time[/] [red](Format hh:mm)[/]:");
 
@@ -78,14 +79,23 @@ internal class UserInput
 
         while (!TimeSpan.TryParseExact(start, "g", new CultureInfo("en-US"),TimeSpanStyles.None, out startTime))
         {
-            start = AnsiConsole.Ask<string>("[darkturquoise]Please input your start time[/] [red](Format hh:mm)[/]:");
+            start = AnsiConsole.Ask<string>("[darkturquoise]Incorrect start time, Please try again[/] [red](Format hh:mm)[/]:");
         }
 
         while (!TimeSpan.TryParseExact(end, "g", new CultureInfo("en-US"), TimeSpanStyles.None, out endTime))
         {
-            end = AnsiConsole.Ask<string>("[darkturquoise]Please input your end time[/] [red](Format hh:mm)[/]:");
+            end = AnsiConsole.Ask<string>("[darkturquoise]Incorrect end time, Please try again[/] [red](Format hh:mm)[/]:");
         }
 
         return new TimeSpan[] { startTime, endTime };
+    }
+
+    internal static int GetId()
+    {
+        CRUD.ViewRecords();
+
+        string? id = AnsiConsole.Ask<string>("Type the Id of the record you want: ");
+
+        return Convert.ToInt32(id);
     }
 }
