@@ -1,5 +1,6 @@
 ﻿using System.Configuration;
 using System.Data.SQLite;
+using System.Globalization;
 using CodingTracker.Model;
 using Dapper;
 using Spectre.Console;
@@ -20,6 +21,7 @@ internal class CRUD
 
             string sql = @"CREATE TABLE IF NOT EXISTS codingSessions (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Date TEXT,
                     Start TEXT,
                     End TEXT,
                     Duration TEXT)";
@@ -32,16 +34,18 @@ internal class CRUD
 
     internal void addToTable()
     {
-        DateTime[] dates = input.GetDates();
-        string duration = CalculateDuration(dates[0], dates[1]);
+        AnsiConsole.Clear();
+        DateOnly date = input.GetDate();
+        TimeSpan[] times = input.GetTime();
+        string duration = CalculateDuration(times[0], times[1]);
 
         using (var connection = new SQLiteConnection(con))
         {
             connection.Open();
 
             string sql =
-                @$"INSERT INTO codingSessions (Start, End, Duration)
-                    VALUES ('{dates[0]}', '{dates[1]}', '{duration}')";
+                @$"INSERT INTO codingSessions (Date, Start, End, Duration)
+                    VALUES ('{date}', '{times[0]}', '{times[1]}', '{duration}')";
 
             var cmd = connection.Execute(sql);
 
@@ -51,7 +55,7 @@ internal class CRUD
         }
     }
 
-    internal string CalculateDuration(DateTime start, DateTime end)
+    internal string CalculateDuration(TimeSpan start, TimeSpan end)
     {
         TimeSpan dur = end - start;
         return dur.ToString("c");
@@ -68,15 +72,25 @@ internal class CRUD
             
             List<CodingSession> sessions = new List<CodingSession>();
 
+            var exists = connection.ExecuteScalar<bool>("SELECT COUNT(*) FROM codingSessions");
+
+            if (!exists)
+            {
+                AnsiConsole.Markup("[red]This table is empty![/]\n");
+                connection.Close();
+                return;
+            }
+
             while (reader.Read())
             {
                 sessions.Add(
                 new CodingSession
                 {
                     Id = reader.GetInt32(0),
-                    StartTime = DateTime.Parse(reader.GetString(1)),
-                    EndTime = DateTime.Parse(reader.GetString(2)),
-                    Duration = reader.GetString(3)
+                    Date = DateOnly.Parse(reader.GetString(1)),
+                    StartTime = TimeSpan.Parse(reader.GetString(2)),
+                    EndTime = TimeSpan.Parse(reader.GetString(3)),
+                    Duration = TimeSpan.Parse(reader.GetString(4))
                 }); ;
             }
 
@@ -91,25 +105,29 @@ internal class CRUD
             {
                 table.AddColumn("[steelblue1_1]ID[/]");
                 ctx.Refresh();
-                Thread.Sleep(1000);
+                Thread.Sleep(850);
+
+                table.AddColumn("[mediumturquoise]Date[/]");
+                ctx.Refresh();
+                Thread.Sleep(850);
 
                 table.AddColumn("[blue]Start Time[/]");
                 ctx.Refresh();
-                Thread.Sleep(1000);
+                Thread.Sleep(850);
 
                 table.AddColumn("[red]End Time[/]");
                 ctx.Refresh();
-                Thread.Sleep(1000);
+                Thread.Sleep(850);
 
                 table.AddColumn("[darkmagenta_1]Duration[/]");
                 ctx.Refresh();
-                Thread.Sleep(1000);
+                Thread.Sleep(850);
 
                 foreach (var session in sessions)
                 {
-                    table.AddRow($"[steelblue1_1]{session.Id}[/]", $"[blue]{session.StartTime}[/]", $"[red]{session.EndTime}[/]", $"[darkmagenta_1]{session.Duration}[/]");
+                    table.AddRow($"[steelblue1_1]{session.Id}[/]", $"[mediumturquoise]{session.Date}[/]" , $"[blue]{session.StartTime}[/]", $"[red]{session.EndTime}[/]", $"[darkmagenta_1]{session.Duration}[/]");
                     ctx.Refresh();
-                    Thread.Sleep(700);
+                    Thread.Sleep(850);
                 }
             });
         }
