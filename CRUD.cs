@@ -6,13 +6,11 @@ using Spectre.Console;
 
 namespace CodingTracker;
 
-
 internal class CRUD
 {
     static readonly string? con = ConfigurationManager.AppSettings.Get("connectionString");
 
-    UserInput input = new();
-    internal void CreateDB()
+    internal static void CreateDB()
     {
         using (var connection = new SQLiteConnection(con))
         {
@@ -20,6 +18,7 @@ internal class CRUD
 
             string sql = @"CREATE TABLE IF NOT EXISTS codingSessions (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Date TEXT,
                     Start TEXT,
                     End TEXT,
                     Duration TEXT)";
@@ -30,34 +29,36 @@ internal class CRUD
         }
     }
 
-    internal void addToTable()
+    internal static void AddToTable()
     {
-        DateTime[] dates = input.GetDates();
-        string duration = CalculateDuration(dates[0], dates[1]);
+        AnsiConsole.Clear();
+        DateOnly date = UserInput.GetDate();
+        TimeSpan[] times = UserInput.GetTime();
+        string duration = CalculateDuration(times[0], times[1]);
 
         using (var connection = new SQLiteConnection(con))
         {
             connection.Open();
 
             string sql =
-                @$"INSERT INTO codingSessions (Start, End, Duration)
-                    VALUES ('{dates[0]}', '{dates[1]}', '{duration}')";
+                @$"INSERT INTO codingSessions (Date, Start, End, Duration)
+                    VALUES ('{date}', '{times[0]}', '{times[1]}', '{duration}')";
 
             var cmd = connection.Execute(sql);
 
             connection.Close();
 
-            AnsiConsole.Markup("[springgreen3_1]Records added succesfully![/]\n");
+            AnsiConsole.MarkupLine("[springgreen3_1]Records added succesfully![/]");
         }
     }
 
-    internal string CalculateDuration(DateTime start, DateTime end)
+    internal static string CalculateDuration(TimeSpan start, TimeSpan end)
     {
         TimeSpan dur = end - start;
         return dur.ToString("c");
     }
 
-    internal static void viewRecords()
+    internal static void ViewRecords()
     {
         AnsiConsole.Clear();
         using (var connection = new SQLiteConnection(con))
@@ -68,15 +69,25 @@ internal class CRUD
             
             List<CodingSession> sessions = new List<CodingSession>();
 
+            var exists = connection.ExecuteScalar<bool>("SELECT COUNT(*) FROM codingSessions");
+
+            if (!exists)
+            {
+                AnsiConsole.MarkupLine("[red]This table is empty![/]");
+                connection.Close();
+                return;
+            }
+
             while (reader.Read())
             {
                 sessions.Add(
                 new CodingSession
                 {
                     Id = reader.GetInt32(0),
-                    StartTime = DateTime.Parse(reader.GetString(1)),
-                    EndTime = DateTime.Parse(reader.GetString(2)),
-                    Duration = reader.GetString(3)
+                    Date = DateOnly.Parse(reader.GetString(1)),
+                    StartTime = TimeSpan.Parse(reader.GetString(2)),
+                    EndTime = TimeSpan.Parse(reader.GetString(3)),
+                    Duration = TimeSpan.Parse(reader.GetString(4))
                 }); ;
             }
 
@@ -91,27 +102,75 @@ internal class CRUD
             {
                 table.AddColumn("[steelblue1_1]ID[/]");
                 ctx.Refresh();
-                Thread.Sleep(1000);
+                Thread.Sleep(850);
+
+                table.AddColumn("[mediumturquoise]Date[/]");
+                ctx.Refresh();
+                Thread.Sleep(850);
 
                 table.AddColumn("[blue]Start Time[/]");
                 ctx.Refresh();
-                Thread.Sleep(1000);
+                Thread.Sleep(850);
 
                 table.AddColumn("[red]End Time[/]");
                 ctx.Refresh();
-                Thread.Sleep(1000);
+                Thread.Sleep(850);
 
                 table.AddColumn("[darkmagenta_1]Duration[/]");
                 ctx.Refresh();
-                Thread.Sleep(1000);
+                Thread.Sleep(850);
 
                 foreach (var session in sessions)
                 {
-                    table.AddRow($"[steelblue1_1]{session.Id}[/]", $"[blue]{session.StartTime}[/]", $"[red]{session.EndTime}[/]", $"[darkmagenta_1]{session.Duration}[/]");
+                    table.AddRow($"[steelblue1_1]{session.Id}[/]", $"[mediumturquoise]{session.Date}[/]" , $"[blue]{session.StartTime}[/]", $"[red]{session.EndTime}[/]", $"[darkmagenta_1]{session.Duration}[/]");
                     ctx.Refresh();
-                    Thread.Sleep(700);
+                    Thread.Sleep(850);
                 }
             });
+        }
+    }
+
+    internal static void DeleteRecords()
+    {
+        int id = UserInput.GetId();
+
+        using (var connection = new SQLiteConnection(con))
+        {
+            connection.Open();
+
+            var sql = $"DELETE FROM codingSessions WHERE Id = {id}";
+
+            var cmd = connection.Execute(sql);
+
+            connection.Close();
+
+            AnsiConsole.MarkupLine("[mediumpurple3_1]Records deleted succesfully![/]");
+        }
+    }
+
+    internal static void UpdateRecords()
+    {
+        int id = UserInput.GetId();
+        DateOnly date = UserInput.GetDate();
+        TimeSpan[] time = UserInput.GetTime();
+        string? duration = CalculateDuration(time[0], time[1]);
+
+        using (var connection = new SQLiteConnection(con))
+        {
+            connection.Open();
+
+            string sql = @$"UPDATE codingSessions SET 
+                Date = '{date}',
+                Start = '{time[0]}',
+                End = '{time[1]}',
+                Duration = '{duration}'
+            WHERE Id = {id}";
+
+            var cmd = connection.Execute(sql);
+
+            connection.Close();
+
+            AnsiConsole.MarkupLine("[springgreen3_1]Records updated succesfully![/]");
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Spectre.Console;
 using System.Globalization;
-using System.Runtime.InteropServices;
 
 namespace CodingTracker;
 
@@ -8,77 +7,95 @@ internal class UserInput
 {
     internal void Menu()
     {
-        CRUD op = new();
-        op.CreateDB();
+        CRUD.CreateDB();
 
         bool closeApp = true;
 
         while (closeApp)
         {
-            //AnsiConsole.Clear();
-            var panel = new Panel("[skyblue3]Type 0 to Close Application[/]" +
-                "\n[royalblue1]Type 1 to View All Records[/]" +
-                "\n[springgreen3]Type 2 to Insert Record[/]" +
-                "\n[red]Type 3 to Delete Record[/]" +
-                "\n[turquoise2]Type 4 to Update Record[/]");
-            panel.Header = new PanelHeader("Main Menu:");
-            panel.Padding = new Padding(1, 1, 1, 1);
-            panel.BorderColor<Panel>(Color.Aquamarine3);
-            panel.Border = BoxBorder.Rounded;
-            panel.Expand = false;
-            AnsiConsole.Write(panel);
+            var menu = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+            .Title("What do you want to do with the records?")
+            .PageSize(10)
+            .MoreChoicesText("[grey](Move up and down to select an option)[/]")
+            .AddChoices(new[] {
+                "View All", "Add",
+                "Delete", "Update",
+                "Leave",
+            }));
 
-
-            string? command = Console.ReadLine();
-
-            switch (command)
+            switch (menu)
             {
-                case "0":
-                    Console.WriteLine("Bye!");
+                case "Leave":
+                    AnsiConsole.MarkupLine("[chartreuse2]Bye![/]");
+                    closeApp = false;
                     break;
 
-                case "1":
-                    CRUD.viewRecords();
+                case "View All":
+                    CRUD.ViewRecords();
                     break;
 
-                case "2":
-                    op.addToTable();
+                case "Add":
+                    CRUD.AddToTable();
                     break;
 
-                case "3":
+                case "Delete":
+                    CRUD.DeleteRecords();
                     break;
 
-                case "4":
+                case "Update":
+                    CRUD.UpdateRecords();
                     break;
 
                 default:
+                    AnsiConsole.MarkupLine("[red]That's not a valid option![/]");
                     break;
             }
         }
     }
 
-    internal DateTime[] GetDates()
+    internal static DateOnly GetDate()
     {
-        Console.Clear();
+        string? date = AnsiConsole.Ask<string>("[darkturquoise]Please input the date[/] [red](Format dd-MM-yy)[/]:");
 
-        string? start = AnsiConsole.Ask<string>("[darkturquoise]Please input your start date[/] [red](Format dd-MM-yy hh:mm)[/]:");
+        DateOnly Date;
 
-        string? end = AnsiConsole.Ask<string>("[darkturquoise]Please input your end date[/] [red](Format dd-MM-yy hh:mm)[/]:");
-
-        DateTime startDate;
-        DateTime endDate;
+        while (!DateOnly.TryParseExact(date, "dd-MM-yy", new CultureInfo("en-US"), DateTimeStyles.None, out Date))
+        {
+            date = AnsiConsole.Ask<string>("[darkturquoise]Invalid date,please try again[/] [red](Format dd-MM-yy)[/]:");
+        }
         
+        return Date;
+    }
 
-        while (!DateTime.TryParseExact(start, "dd-MM-yy HH:mm", new CultureInfo("en-US"), DateTimeStyles.None, out startDate))
+    internal static TimeSpan[] GetTime()
+    {
+        string? start = AnsiConsole.Ask<string>("[darkturquoise]Please input your start time[/] [red](Format hh:mm)[/]:");
+
+        string? end = AnsiConsole.Ask<string>("[darkturquoise]Please input your end time[/] [red](Format hh:mm)[/]:");
+
+        TimeSpan startTime;
+        TimeSpan endTime;
+
+        while (!TimeSpan.TryParseExact(start, "g", new CultureInfo("en-US"),TimeSpanStyles.None, out startTime))
         {
-            start = AnsiConsole.Ask<string>("[darkturquoise]Invalid start date,please try again[/] [red](Format dd-MM-yy hh:mm)[/]:");
+            start = AnsiConsole.Ask<string>("[darkturquoise]Incorrect start time, Please try again[/] [red](Format hh:mm)[/]:");
         }
 
-        while (!DateTime.TryParseExact(end, "dd-MM-yy HH:mm", new CultureInfo("en-US"), DateTimeStyles.None, out endDate))
+        while (!TimeSpan.TryParseExact(end, "g", new CultureInfo("en-US"), TimeSpanStyles.None, out endTime))
         {
-            end = AnsiConsole.Ask<string>("[darkturquoise]Invalid end date,please try again[/] [red](Format dd-MM-yy hh:mm)[/]:");
+            end = AnsiConsole.Ask<string>("[darkturquoise]Incorrect end time, Please try again[/] [red](Format hh:mm)[/]:");
         }
 
-        return new DateTime[] { startDate, endDate };
+        return new TimeSpan[] { startTime, endTime };
+    }
+
+    internal static int GetId()
+    {
+        CRUD.ViewRecords();
+
+        string? id = AnsiConsole.Ask<string>("Type the Id of the record you want: ");
+
+        return Convert.ToInt32(id);
     }
 }
