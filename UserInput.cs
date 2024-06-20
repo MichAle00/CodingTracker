@@ -19,7 +19,7 @@ internal class UserInput
             .PageSize(10)
             .MoreChoicesText("[grey](Move up and down to select an option)[/]")
             .AddChoices(new[] {
-                "View All", "Add",
+                "View All", "Add", "Start session",
                 "Delete", "Update",
                 "Leave",
             }));
@@ -45,6 +45,10 @@ internal class UserInput
 
                 case "Update":
                     CRUD.UpdateRecords();
+                    break;
+
+                case "Start session":
+                    CRUD.Session();
                     break;
 
                 default:
@@ -82,9 +86,9 @@ internal class UserInput
             start = AnsiConsole.Ask<string>("[darkturquoise]Incorrect start time, Please try again[/] [red](Format hh:mm)[/]:");
         }
 
-        while (!TimeSpan.TryParseExact(end, "g", new CultureInfo("en-US"), TimeSpanStyles.None, out endTime))
+        while (!TimeSpan.TryParseExact(end, "g", new CultureInfo("en-US"), TimeSpanStyles.None, out endTime) || !Validation.CorrectTime(startTime, endTime))
         {
-            end = AnsiConsole.Ask<string>("[darkturquoise]Incorrect end time, Please try again[/] [red](Format hh:mm)[/]:");
+            end = AnsiConsole.Ask<string>("[darkturquoise]Incorrect end time, end time must be in [red](Format hh:mm)[/] and can't be lower than the start time, Please try again[/] :");
         }
 
         return new TimeSpan[] { startTime, endTime };
@@ -95,6 +99,13 @@ internal class UserInput
         CRUD.ViewRecords();
 
         string? id = AnsiConsole.Ask<string>("Type the Id of the record you want: ");
+
+        while(!Int32.TryParse(id, out _))
+        {
+            AnsiConsole.MarkupLine("[slateblue1]Thay's not a valid number, please try again[/]");
+            id = AnsiConsole.Ask<string>("Type the Id of the record you want: ");
+        }
+
 
         return Convert.ToInt32(id);
     }

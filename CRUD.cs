@@ -134,6 +134,12 @@ internal class CRUD
     {
         int id = UserInput.GetId();
 
+        if (!Validation.IsInTable(id))
+        {
+            AnsiConsole.MarkupLine("[lightslateblue]The Id doesn't exists in the table[/]");
+            return;
+        }
+
         using (var connection = new SQLiteConnection(con))
         {
             connection.Open();
@@ -155,6 +161,12 @@ internal class CRUD
         TimeSpan[] time = UserInput.GetTime();
         string? duration = CalculateDuration(time[0], time[1]);
 
+        if (!Validation.IsInTable(id))
+        {
+            AnsiConsole.MarkupLine("[lightslateblue]The Id doesn't exists in the table[/]");
+            return;
+        }
+
         using (var connection = new SQLiteConnection(con))
         {
             connection.Open();
@@ -172,5 +184,49 @@ internal class CRUD
 
             AnsiConsole.MarkupLine("[springgreen3_1]Records updated succesfully![/]");
         }
+    }
+
+    internal static void Session()
+    {
+        throw new NotImplementedException();
+
+        //Stopwatch stopwatch = new();
+        //DateOnly date = DateOnly.FromDateTime(DateTime.Today);
+
+        //bool stop = false;
+
+        //while (!stop)
+        //{
+        //    stopwatch.Start();
+        //    AnsiConsole.Write(stopwatch.ElapsedMilliseconds / 1000f + " seconds");
+            
+        //}
+
+        //using (var connection = new SQLiteConnection(con))
+        //{
+        //    connection.Open();
+
+        //}
+    }
+
+    internal static void Filter()
+    {
+        string? filter = AnsiConsole.Prompt(
+        new SelectionPrompt<string>()
+        .Title("Filter by:")
+        .PageSize(10)
+        .MoreChoicesText("[grey](Move up and down to select an option)[/]")
+        .AddChoices(new[] {
+            "Month", "Year","Duration",
+        }));
+
+        string? order = AnsiConsole.Prompt(
+        new SelectionPrompt<string>()
+        .Title("Order by:")
+        .PageSize(10)
+        .MoreChoicesText("[grey](Move up and down to select an option)[/]")
+        .AddChoices(new[] {
+            "Ascending", "Descending",
+        }));
     }
 }
