@@ -1,8 +1,11 @@
 ﻿using System.Configuration;
 using System.Data.SQLite;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using CodingTracker.Model;
 using Dapper;
 using Spectre.Console;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CodingTracker;
 
@@ -188,45 +191,49 @@ internal class CRUD
 
     internal static void Session()
     {
-        throw new NotImplementedException();
+        AnsiConsole.Clear();
 
-        //Stopwatch stopwatch = new();
-        //DateOnly date = DateOnly.FromDateTime(DateTime.Today);
+        Stopwatch stopwatch = new();
+        TimeSpan start = DateTime.Now.TimeOfDay;
+        stopwatch.Start();
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        TimeSpan end = DateTime.Now.TimeOfDay; ;
+        string? duration;
+        bool stop = false;
 
-        //bool stop = false;
+        while (!stop)
+        {
+            string? menu = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+            .Title("Press stop when you're finished:")
+            .PageSize(10)
+            .MoreChoicesText("[grey](Move up and down to select an option)[/]")
+            .AddChoices(new[] {
+                "STOP"
+            }));
 
-        //while (!stop)
-        //{
-        //    stopwatch.Start();
-        //    AnsiConsole.Write(stopwatch.ElapsedMilliseconds / 1000f + " seconds");
-            
-        //}
+            if (menu == "STOP")
+            {
+                stopwatch.Stop();
+                end = DateTime.Now.TimeOfDay;
+                stop = true;
+            }
+        }
 
-        //using (var connection = new SQLiteConnection(con))
-        //{
-        //    connection.Open();
+        duration = stopwatch.Elapsed.ToString(@"hh\:mm\:ss");
 
-        //}
-    }
+        using (var connection = new SQLiteConnection(con))
+        {
+            connection.Open();
 
-    internal static void Filter()
-    {
-        string? filter = AnsiConsole.Prompt(
-        new SelectionPrompt<string>()
-        .Title("Filter by:")
-        .PageSize(10)
-        .MoreChoicesText("[grey](Move up and down to select an option)[/]")
-        .AddChoices(new[] {
-            "Month", "Year","Duration",
-        }));
+            string sql = @$"INSERT INTO codingSessions (Date, Start, End, Duration)
+                    VALUES ('{today}', '{start.ToString(@"hh\:mm\:ss")}', '{end.ToString(@"hh\:mm\:ss")}', '{duration}')";
 
-        string? order = AnsiConsole.Prompt(
-        new SelectionPrompt<string>()
-        .Title("Order by:")
-        .PageSize(10)
-        .MoreChoicesText("[grey](Move up and down to select an option)[/]")
-        .AddChoices(new[] {
-            "Ascending", "Descending",
-        }));
+            var cmd = connection.Execute(sql);
+
+            connection.Close();
+
+            AnsiConsole.MarkupLine("[springgreen3_1]Records added succesfully![/]");
+        }
     }
 }

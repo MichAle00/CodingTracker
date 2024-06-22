@@ -19,7 +19,7 @@ internal class UserInput
             .PageSize(10)
             .MoreChoicesText("[grey](Move up and down to select an option)[/]")
             .AddChoices(new[] {
-                "View All", "Add", "Start session",
+                "View All", "Add", "Start session now",
                 "Delete", "Update",
                 "Leave",
             }));
@@ -47,7 +47,7 @@ internal class UserInput
                     CRUD.UpdateRecords();
                     break;
 
-                case "Start session":
+                case "Start session now":
                     CRUD.Session();
                     break;
 
@@ -98,7 +98,7 @@ internal class UserInput
     {
         CRUD.ViewRecords();
 
-        string? id = AnsiConsole.Ask<string>("Type the Id of the record you want: ");
+        string? id = AnsiConsole.Ask<string>("Type the Id of the record you want to modify: ");
 
         while(!Int32.TryParse(id, out _))
         {
@@ -109,4 +109,7 @@ internal class UserInput
 
         return Convert.ToInt32(id);
     }
+
+
+
 }
