@@ -20,7 +20,7 @@ internal class UserInput
             .MoreChoicesText("[grey](Move up and down to select an option)[/]")
             .AddChoices(new[] {
                 "View All", "Add", "Start session now",
-                "Delete", "Update",
+                "Delete", "Update", "Filter",
                 "Leave",
             }));
 
@@ -49,6 +49,10 @@ internal class UserInput
 
                 case "Start session now":
                     CRUD.Session();
+                    break;
+
+                case "Filter":
+                    CRUD.FilterBy();
                     break;
 
                 default:
@@ -110,6 +114,26 @@ internal class UserInput
         return Convert.ToInt32(id);
     }
 
+    internal static string[] Filter()
+    {
+        string? menuFilter = AnsiConsole.Prompt(
+        new SelectionPrompt<string>()
+        .Title("How do you want to filter by:")
+        .PageSize(10)
+        .MoreChoicesText("[grey](Move up and down to select an option)[/]")
+        .AddChoices(new[] {
+            "Day", "Week", "Month", "Year"
+        }));
 
+        string? menuOrder = AnsiConsole.Prompt(
+        new SelectionPrompt<string>()
+        .Title("Order by:")
+        .PageSize(10)
+        .MoreChoicesText("[grey](Move up and down to select an option)[/]")
+        .AddChoices(new[] {
+            "ASC", "DESC"
+        }));
 
+        return new string[] { menuFilter, menuOrder };
+    }
 }

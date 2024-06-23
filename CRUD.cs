@@ -1,11 +1,10 @@
 ﻿using System.Configuration;
+using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using CodingTracker.Model;
 using Dapper;
 using Spectre.Console;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CodingTracker;
 
@@ -68,7 +67,7 @@ internal class CRUD
         {
             connection.Open();
 
-            var reader = connection.ExecuteReader("SELECT * FROM codingSessions");
+            IDataReader reader = connection.ExecuteReader("SELECT * FROM codingSessions");
             
             List<CodingSession> sessions = new List<CodingSession>();
 
@@ -234,6 +233,82 @@ internal class CRUD
             connection.Close();
 
             AnsiConsole.MarkupLine("[springgreen3_1]Records added succesfully![/]");
+        }
+    }
+
+    internal static void FilterBy()
+    {
+        AnsiConsole.Clear();
+        string[] filters = UserInput.Filter();
+
+        using (var connection = new SQLiteConnection(con))
+        {
+            connection.Open();
+
+            List<CodingSession> sessions = new();
+
+            var exists = connection.ExecuteScalar<bool>("SELECT COUNT(*) FROM codingSessions");
+
+            if (!exists)
+            {
+                AnsiConsole.MarkupLine("[red]This table is empty![/]");
+                connection.Close();
+                return;
+            }
+
+            IDataReader reader = connection.ExecuteReader($"SELECT * FROM codingSessions");
+
+            while (reader.Read())
+            {
+                sessions.Add(
+                new CodingSession
+                {
+                    Id = reader.GetInt32(0),
+                    Date = DateOnly.Parse(reader.GetString(1)),
+                    StartTime = TimeSpan.Parse(reader.GetString(2)),
+                    EndTime = TimeSpan.Parse(reader.GetString(3)),
+                    Duration = TimeSpan.Parse(reader.GetString(4))
+                });
+            }
+
+            connection.Close();
+
+            //System.Globalization.Calendar calendar = new CultureInfo("en-US").Calendar;
+
+            var table = new Table().Centered();
+            table.BorderColor<Table>(Color.Cyan3);
+            table.Border = TableBorder.Horizontal;
+
+            AnsiConsole.Live(table)
+            .Start(ctx =>
+            {
+                table.AddColumn("[steelblue1_1]ID[/]");
+                ctx.Refresh();
+                Thread.Sleep(850);
+
+                table.AddColumn("[mediumturquoise]Date[/]");
+                ctx.Refresh();
+                Thread.Sleep(850);
+
+                table.AddColumn("[blue]Start Time[/]");
+                ctx.Refresh();
+                Thread.Sleep(850);
+
+                table.AddColumn("[red]End Time[/]");
+                ctx.Refresh();
+                Thread.Sleep(850);
+
+                table.AddColumn("[darkmagenta_1]Duration[/]");
+                ctx.Refresh();
+                Thread.Sleep(850);
+
+                foreach (var session in sessions)
+                {
+                    table.AddRow($"[steelblue1_1]{session.Id}[/]", $"[mediumturquoise]{session.Date}[/]", $"[blue]{session.StartTime}[/]", $"[red]{session.EndTime}[/]", $"[darkmagenta_1]{session.Duration}[/]");
+                    ctx.Refresh();
+                    Thread.Sleep(850);
+                }
+            });
         }
     }
 }
