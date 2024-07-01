@@ -21,7 +21,7 @@ internal class UserInput
             .AddChoices(new[] {
                 "View All", "Add", "Start session now",
                 "Delete", "Update", "Filter",
-                "Leave",
+                "Report", "Leave",
             }));
 
             switch (menu)
@@ -52,7 +52,11 @@ internal class UserInput
                     break;
 
                 case "Filter":
-                    CRUD.FilterBy();
+                    //CRUD.FilterBy();
+                    break;
+
+                case "Report":
+                    CRUD.Report();
                     break;
 
                 default:
@@ -114,26 +118,26 @@ internal class UserInput
         return Convert.ToInt32(id);
     }
 
-    internal static string[] Filter()
-    {
-        string? menuFilter = AnsiConsole.Prompt(
-        new SelectionPrompt<string>()
-        .Title("How do you want to filter by:")
-        .PageSize(10)
-        .MoreChoicesText("[grey](Move up and down to select an option)[/]")
-        .AddChoices(new[] {
-            "Day", "Week", "Month", "Year"
-        }));
+    //internal static string[] Filter()
+    //{
+    //    string? menuFilter = AnsiConsole.Prompt(
+    //    new SelectionPrompt<string>()
+    //    .Title("How do you want to filter by:")
+    //    .PageSize(10)
+    //    .MoreChoicesText("[grey](Move up and down to select an option)[/]")
+    //    .AddChoices(new[] {
+    //        "Day", "Week", "Month", "Year"
+    //    }));
 
-        string? menuOrder = AnsiConsole.Prompt(
-        new SelectionPrompt<string>()
-        .Title("Order by:")
-        .PageSize(10)
-        .MoreChoicesText("[grey](Move up and down to select an option)[/]")
-        .AddChoices(new[] {
-            "ASC", "DESC"
-        }));
+    //    string? menuOrder = AnsiConsole.Prompt(
+    //    new SelectionPrompt<string>()
+    //    .Title("Order by:")
+    //    .PageSize(10)
+    //    .MoreChoicesText("[grey](Move up and down to select an option)[/]")
+    //    .AddChoices(new[] {
+    //        "Ascending", "Descending"
+    //    }));
 
-        return new string[] { menuFilter, menuOrder };
-    }
+    //    return new string[] { menuFilter, menuOrder };
+    //}
 }
