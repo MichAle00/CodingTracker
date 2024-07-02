@@ -118,26 +118,44 @@ internal class UserInput
         return Convert.ToInt32(id);
     }
 
-    //internal static string[] Filter()
-    //{
-    //    string? menuFilter = AnsiConsole.Prompt(
-    //    new SelectionPrompt<string>()
-    //    .Title("How do you want to filter by:")
-    //    .PageSize(10)
-    //    .MoreChoicesText("[grey](Move up and down to select an option)[/]")
-    //    .AddChoices(new[] {
-    //        "Day", "Week", "Month", "Year"
-    //    }));
+    internal static void GoalsMenu()
+    {
+        var menu = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+            .Title("What do you want to do?")
+            .PageSize(10)
+            .MoreChoicesText("[grey](Move up and down to select an option)[/]")
+            .AddChoices(new[] {
+                "Set Goal", "See progress"
+            }));
 
-    //    string? menuOrder = AnsiConsole.Prompt(
-    //    new SelectionPrompt<string>()
-    //    .Title("Order by:")
-    //    .PageSize(10)
-    //    .MoreChoicesText("[grey](Move up and down to select an option)[/]")
-    //    .AddChoices(new[] {
-    //        "Ascending", "Descending"
-    //    }));
+        switch (menu)
+        {
+            case "Set Goal":
+                CRUD.SetGoals();
+                break;
 
-    //    return new string[] { menuFilter, menuOrder };
-    //}
+            case "See progress":
+                CRUD.Progress();
+                break;
+        }
+    }
+
+    internal static string[] Period()
+    {
+        var period = AnsiConsole.Prompt(
+        new SelectionPrompt<string>()
+        .Title("Select the time period you want for the goal")
+        .PageSize(10)
+        .MoreChoicesText("[grey](Move up and down to select an option)[/]")
+        .AddChoices(new[] {
+            "Week", "Month"
+        }));
+
+        string? quantity = AnsiConsole.Ask<string>($"How many {period}s do you want to set?: ");
+
+        string? time = AnsiConsole.Ask<string>("How many hours?: ");
+
+        return new string[] { period, quantity, time };
+    }
 }

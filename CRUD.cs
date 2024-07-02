@@ -439,4 +439,38 @@ internal class CRUD
             });
         }
     }
+
+    internal static void SetGoals()
+    {
+        using (var connection = new SQLiteConnection(con))
+        {
+            connection.Open();
+
+            string sql = $@"CREATE TABLE IF NOT EXISTS goals (
+                Period TEXT,
+                Quantity INTEGER,
+                Time TEXT)";
+
+            var cmd = connection.Execute(sql);
+
+            string[] data = UserInput.Period();
+
+            sql = $@"INSERT INTO goals (Period, Quantity, Time)
+                    VALUES ('{data[0]}', '{data[1]}', '{data[2]}')";
+
+            cmd = connection.Execute(sql);
+
+            connection.Close();
+        }
+    }
+
+    internal static void Progress()
+    {
+        using (var connection = new SQLiteConnection(con))
+        {
+            connection.Open();
+
+            string sql = @"SELECT ";
+        }    
+    }
 }
